@@ -22,9 +22,9 @@ public class MainActivity extends Activity {
 
     private  String TAG = "* MAIN *";
 
-    private final  BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    private final BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     private List<BluetoothDevice> devices = new ArrayList<BluetoothDevice>(bluetoothAdapter.getBondedDevices());
-    private ArrayAdapter<String> deviceNames = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
+    private ArrayAdapter<String> deviceNames;
 
     private final BroadcastReceiver btBroadcastsReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent){
@@ -36,9 +36,14 @@ public class MainActivity extends Activity {
                 listDevices();
             }
 
+            if (BluetoothAdapter.ACTION_REQUEST_ENABLE.equals(action)) {
+                Log.d(TAG, "Request Enable BT Accepted");
+            }
+
             if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)){
                 Log.d(TAG, "Discovery Started");
             }
+
             if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)){
                 Log.d(TAG, "Discovery Finished");
             }
@@ -52,6 +57,7 @@ public class MainActivity extends Activity {
 
         //UI Components
         ListView deviceListView = (ListView) findViewById(R.id.device_list);
+        deviceNames = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
         deviceListView.setAdapter(deviceNames);
 
         //Request to switch on BT on start up
@@ -63,11 +69,17 @@ public class MainActivity extends Activity {
         ///////////////////
         IntentFilter btIntentFilter = new IntentFilter();
         btIntentFilter.addAction(BluetoothDevice.ACTION_FOUND);
+        btIntentFilter.addAction(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         btIntentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
         btIntentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         ///////////////////
 
         registerReceiver(btBroadcastsReceiver, btIntentFilter);
+
+        if ( bluetoothAdapter != null) {
+            listDevices();
+            bluetoothAdapter.startDiscovery();
+        }
     }
 
 
@@ -85,15 +97,25 @@ public class MainActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
+            if ( bluetoothAdapter != null) {
+                listDevices();
+                bluetoothAdapter.startDiscovery();
+            }
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(btBroadcastsReceiver);
+    }
+
     private void listDevices() {
-        for (BluetoothDevice device : this.devices) {
+        for (BluetoothDevice device : devices) {
             if (device.getName() != null) {
-                this.deviceNames.add(device.getName());
+                deviceNames.add(device.getName());
             }
         }
     }
