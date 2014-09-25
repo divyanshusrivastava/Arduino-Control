@@ -28,6 +28,25 @@ public class MainActivity extends Activity {
     private ArrayAdapter<String> deviceNames = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
     private ListView deviceListView;
 
+    private final BroadcastReceiver btBroadcastsReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent){
+            String action = intent.getAction();
+
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                BluetoothDevice foundDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                devices.add(foundDevice);
+                listDevices();
+            }
+
+            if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)){
+                Log.d(TAG, "Discovery Started");
+            }
+            if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)){
+                Log.d(TAG, "Discovery Finished");
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,24 +71,6 @@ public class MainActivity extends Activity {
     }
 
 
-    private final BroadcastReceiver btBroadcastsReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent){
-            String action = intent.getAction();
-
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                BluetoothDevice foundDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-
-            }
-
-            if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)){
-                Log.d(TAG, "Discovery Started");
-            }
-            if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)){
-                Log.d(TAG, "Discovery Finished");
-            }
-        }
-    };
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -85,7 +86,6 @@ public class MainActivity extends Activity {
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
             return true;
-
         }
         return super.onOptionsItemSelected(item);
     }
