@@ -17,6 +17,9 @@ import android.widget.ListView;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.keyboardsurfer.android.widget.crouton.Crouton;
+import de.keyboardsurfer.android.widget.crouton.Style;
+
 
 public class MainActivity extends Activity {
 
@@ -39,13 +42,15 @@ public class MainActivity extends Activity {
             if (BluetoothAdapter.ACTION_REQUEST_ENABLE.equals(action)) {
                 Log.d(TAG, "Request Enable BT Accepted");
             }
-
+            
             if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)){
                 Log.d(TAG, "Discovery Started");
+                Crouton.makeText(MainActivity.this, R.string.bt_discovery_started, Style.INFO).show();
             }
 
             if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)){
                 Log.d(TAG, "Discovery Finished");
+                Crouton.makeText(MainActivity.this, R.string.bt_discovery_complete, Style.CONFIRM).show();
             }
         }
     };
@@ -76,9 +81,13 @@ public class MainActivity extends Activity {
 
         registerReceiver(btBroadcastsReceiver, btIntentFilter);
 
+
+        // Start Discovering after user allows access to bt
         if ( bluetoothAdapter != null) {
             listDevices();
             bluetoothAdapter.startDiscovery();
+        } else {
+            //TODO : Check this without bt support
         }
     }
 

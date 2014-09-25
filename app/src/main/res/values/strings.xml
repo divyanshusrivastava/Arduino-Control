@@ -3,6 +3,10 @@
 
     <string name="app_name">Arduino Control</string>
     <string name="hello_world">Hello world!</string>
-    <string name="action_refresh">REFRESH</string>
+    <string name="action_refresh">Refresh</string>
+
+    <string name="bt_discovery_started">Discovering</string>
+    <string name="bt_discovery_complete">Discovery Complete</string>
+    <string name="bt_support_not_found">Bluetooth Hardware Missing</string>
 
 </resources>
