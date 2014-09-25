@@ -8,5 +8,12 @@
     <string name="bt_discovery_started">Discovering</string>
     <string name="bt_discovery_complete">Discovery Complete</string>
     <string name="bt_support_not_found">Bluetooth Hardware Missing</string>
+    <string name="bt_initiate_connection">Connecting</string>
+    <string name="bt_connected">Connected</string>
+
+    <!--
+        UI
+    -->
+    <string name="close_connection">x</string>
 
 </resources>

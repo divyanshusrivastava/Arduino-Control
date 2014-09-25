@@ -11,12 +11,12 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
 
@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
             if (BluetoothAdapter.ACTION_REQUEST_ENABLE.equals(action)) {
                 Log.d(TAG, "Request Enable BT Accepted");
             }
-            
+
             if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)){
                 Log.d(TAG, "Discovery Started");
                 Crouton.makeText(MainActivity.this, R.string.bt_discovery_started, Style.INFO).show();
@@ -55,6 +55,18 @@ public class MainActivity extends Activity {
         }
     };
 
+    AdapterView.OnItemClickListener onDeviceClick = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            bluetoothAdapter.cancelDiscovery();
+            BluetoothDevice selectedDevice = devices.get(position);
+
+            Intent intent = new Intent(MainActivity.this, ConnectedActivity.class);
+            intent.putExtra("MAC_ADDRESS", selectedDevice.getAddress());
+            startActivity(intent);
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +76,8 @@ public class MainActivity extends Activity {
         ListView deviceListView = (ListView) findViewById(R.id.device_list);
         deviceNames = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
         deviceListView.setAdapter(deviceNames);
+        deviceListView.setOnItemClickListener(onDeviceClick);
+
 
         //Request to switch on BT on start up
         if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
