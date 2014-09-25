@@ -57,7 +57,11 @@ public class MainActivity extends Activity {
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
             return true;
+
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void listDevices() {
     }
 }
