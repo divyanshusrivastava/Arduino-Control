@@ -89,4 +89,12 @@ public class MainActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+    private void listDevices() {
+        for (BluetoothDevice device : this.devices) {
+            if (device.getName() != null) {
+                this.deviceNames.add(device.getName());
+            }
+        }
+    }
 }
