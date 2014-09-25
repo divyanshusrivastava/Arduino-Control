@@ -21,12 +21,10 @@ import java.util.List;
 public class MainActivity extends Activity {
 
     private  String TAG = "* MAIN *";
-    private final int REQUEST_ENABLE_BT = 1;
 
     private final  BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     private List<BluetoothDevice> devices = new ArrayList<BluetoothDevice>(bluetoothAdapter.getBondedDevices());
     private ArrayAdapter<String> deviceNames = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-    private ListView deviceListView;
 
     private final BroadcastReceiver btBroadcastsReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent){
@@ -52,13 +50,15 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //
-
-        /**
-         * UI Components
-        **/
-        deviceListView = (ListView) findViewById(R.id.device_list);
+        //UI Components
+        ListView deviceListView = (ListView) findViewById(R.id.device_list);
         deviceListView.setAdapter(deviceNames);
+
+        //Request to switch on BT on start up
+        if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled()) {
+            int REQUEST_ENABLE_BT = 1;
+            startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQUEST_ENABLE_BT);
+        }
 
         ///////////////////
         IntentFilter btIntentFilter = new IntentFilter();
