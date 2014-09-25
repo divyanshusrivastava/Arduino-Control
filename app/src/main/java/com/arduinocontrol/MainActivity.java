@@ -31,7 +31,7 @@ public class MainActivity extends Activity {
         /**
             UI Components
         */
-        deviceList = R.id.device_list;
+        deviceList = (ListView) findViewById(R.id.device_list);
 
 
         IntentFilter btIntentFilter = new IntentFilter();
@@ -39,6 +39,7 @@ public class MainActivity extends Activity {
         btIntentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
         btIntentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
     }
+
 
 
     @Override
@@ -54,7 +55,7 @@ public class MainActivity extends Activity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_refresh) {
             return true;
         }
         return super.onOptionsItemSelected(item);
