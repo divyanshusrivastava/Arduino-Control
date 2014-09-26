@@ -3,6 +3,7 @@ package com.arduinocontrol;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -61,11 +62,29 @@ public class ConnectedActivity extends Activity implements SensorEventListener {
         ToggleButton toggleStream = (ToggleButton) findViewById(R.id.toggle_stream);
         toggleStream.setOnCheckedChangeListener(onPauseStreamToggle);
 
-        Button ping = (Button) findViewById(R.id.pingu);
-        ping.setOnClickListener(new View.OnClickListener() {
+        Button pingUp = (Button) findViewById(R.id.pingup);
+        pingUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                streamToServer.write("1".getBytes());
+                try {
+                    bluetoothConnector.getOutputStream().write("1".getBytes());
+                    Crouton.makeText(ConnectedActivity.this, "Sent 1", Style.INFO).show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        Button pingDown = (Button) findViewById(R.id.pingdown);
+        pingDown.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                try {
+                    bluetoothConnector.getOutputStream().write("0".getBytes());
+                    Crouton.makeText(ConnectedActivity.this, "Sent 0", Style.INFO).show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                };
             }
         });
 
@@ -207,7 +226,7 @@ public class ConnectedActivity extends Activity implements SensorEventListener {
             Crouton.makeText(ConnectedActivity.this, R.string.bt_connected, Style.INFO).show();
             findViewById(R.id.close_connection).setEnabled(true);
             streamToServer = new StreamToServer(bluetoothConnector);
-            streamToServer.start();
+            //streamToServer.start();
         }
     }
 

@@ -35,8 +35,10 @@ public class MainActivity extends Activity {
 
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice foundDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                devices.add(foundDevice);
-                listDevices();
+                if (devices.indexOf(foundDevice) == -1) {
+                    devices.add(foundDevice);
+                    listDevices();
+                }
             }
 
             if (BluetoothAdapter.ACTION_REQUEST_ENABLE.equals(action)) {
@@ -136,6 +138,7 @@ public class MainActivity extends Activity {
     }
 
     private void listDevices() {
+        deviceNames.clear();
         for (BluetoothDevice device : devices) {
             if (device.getName() != null) {
                 deviceNames.add(device.getName());
