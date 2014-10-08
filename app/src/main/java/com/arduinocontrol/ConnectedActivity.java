@@ -4,48 +4,51 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.content.Context;
 import android.content.Intent;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.*;
-import android.widget.*;
+import android.os.Parcelable;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.SeekBar;
+import android.widget.ToggleButton;
+
 import de.keyboardsurfer.android.widget.crouton.Crouton;
-import de.keyboardsurfer.android.widget.crouton.Style;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 
 
-public class ConnectedActivity extends Activity implements SensorEventListener {
+public class ConnectedActivity extends Activity {
 
-    private final String TAG = "* CONNECTED *";
-    private List<UUID> candidateUUIDs= new ArrayList<UUID>();
-    private final  BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-    private BluetoothConnector bluetoothConnector;
-    private BluetoothDevice bluetoothDevice;
-    private String mac_address = null;
-    private StreamToServer streamToServer;
-    private SensorManager sensorManager;
-    private Sensor accelerometer;
-    private int t=0;
-    private boolean streamPaused = false;
-    private float threshold;
+    final String TAG = "* CONNECTED *";
+    final  BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    BluetoothDevice server;
+    String mac_address = null;
+    float threshold;
+    boolean streamPaused;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //supportRequestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.activity_connected);
+
+        /////////////////////////////////
+        Button pingUp = (Button) findViewById(R.id.pingup);
+        Button pingDown = (Button) findViewById(R.id.pingdown);
+
+        findViewById(R.id.close_connection).setEnabled(false);
+
+        ToggleButton toggleStream = (ToggleButton) findViewById(R.id.toggle_stream);
+        toggleStream.setOnCheckedChangeListener(onPauseStreamToggle);
+
+        Button closeConnection = (Button) findViewById(R.id.close_connection);
+        closeConnection.setOnClickListener(onCloseConnectionClick);
+
+        SeekBar threshold = (SeekBar) findViewById(R.id.threshold);
+        threshold.setOnSeekBarChangeListener(onThresholdChange);
+        //////////////////////////////////
 
         Bundle extras = getIntent().getExtras();
         if (extras != null){
@@ -53,57 +56,11 @@ public class ConnectedActivity extends Activity implements SensorEventListener {
         }
 
         if (mac_address != null){
-            bluetoothDevice = bluetoothAdapter.getRemoteDevice(mac_address);
-            setTitle(bluetoothDevice.getName());
+            server = bluetoothAdapter.getRemoteDevice(mac_address);
+            setTitle(server.getName());
         }
 
-        findViewById(R.id.close_connection).setEnabled(false);
-
-        ToggleButton toggleStream = (ToggleButton) findViewById(R.id.toggle_stream);
-        toggleStream.setOnCheckedChangeListener(onPauseStreamToggle);
-
-        Button pingUp = (Button) findViewById(R.id.pingup);
-        pingUp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-                    bluetoothConnector.getOutputStream().write("1".getBytes());
-                    Crouton.makeText(ConnectedActivity.this, "Sent 1", Style.INFO).show();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        Button pingDown = (Button) findViewById(R.id.pingdown);
-        pingDown.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-                    bluetoothConnector.getOutputStream().write("0".getBytes());
-                    Crouton.makeText(ConnectedActivity.this, "Sent 0", Style.INFO).show();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                };
-            }
-        });
-
-        Button closeConnection = (Button) findViewById(R.id.close_connection);
-        closeConnection.setOnClickListener(onCloseConnectionClick);
-
-        SeekBar threshold = (SeekBar) findViewById(R.id.threshold);
-        threshold.setOnSeekBarChangeListener(onThresholdChange);
-
-        candidateUUIDs.add(UUID.fromString("a1a738e0-c3b3-11e3-9c1a-0800200c9a66"));
-        candidateUUIDs.add(UUID.fromString("94f39d29-7d6d-437d-973b-fba39e49d4ee"));
-
-        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-
-        bluetoothConnector = new BluetoothConnector(bluetoothDevice, bluetoothAdapter, candidateUUIDs);
-        new ConnectToDevice().execute(bluetoothConnector);
-
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        //BluetoothSocket btSocket = server.createInsecureRfcommSocketToServiceRecord();
     }
 
     SeekBar.OnSeekBarChangeListener onThresholdChange = new SeekBar.OnSeekBarChangeListener() {
@@ -126,64 +83,31 @@ public class ConnectedActivity extends Activity implements SensorEventListener {
     CompoundButton.OnCheckedChangeListener onPauseStreamToggle = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-            if(isChecked){
-                streamPaused = false;
-            } else {
-                streamPaused = true;
-            }
+            streamPaused = !isChecked;
         }
     };
 
     View.OnClickListener onCloseConnectionClick = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if (streamToServer != null) {
-                streamToServer.write("quit".getBytes());
-                try {
-                    bluetoothConnector.close();
-                } catch (IOException e){
-                    Log.d(TAG, "IOException occurred while closing connection");
-                    e.printStackTrace();
-                }
-                Intent intent = new Intent(ConnectedActivity.this, MainActivity.class);
-                startActivity(intent);
-            }
+            Intent intent = new Intent(ConnectedActivity.this, MainActivity.class);
+            startActivity(intent);
         }
     };
 
-    @Override
-    public final void onSensorChanged(SensorEvent event) {
-        t = t+1; //relative timestamps
-        byte[] data = (String.valueOf(t) + "," +String.valueOf(event.values[0]) + "," + String.valueOf(event.values[1]) + "," + String.valueOf(event.values[2])).getBytes();
-        float mod = 0;
-        for(int i=0; i<3; i++){
-            mod += event.values[i]*event.values[i];
-        }
-        if (streamToServer != null && !streamPaused && mod > threshold) {
-            streamToServer.write(data);
-        }
-    }
-
-    @Override
-    public final void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // Do something here if sensor accuracy changes.
-    }
 
     @Override
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        sensorManager.unregisterListener(this);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
         // Inflate the menu; this adds items to the action bar if it is present.
         return true;
     }
@@ -198,65 +122,6 @@ public class ConnectedActivity extends Activity implements SensorEventListener {
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private class ConnectToDevice extends AsyncTask<BluetoothConnector, Void, BluetoothConnector>{
-        @Override
-        protected BluetoothConnector doInBackground(BluetoothConnector... params){
-            try {
-                params[0].connect();
-                Log.d(TAG, "Socket connected");
-            } catch (IOException e) {
-                e.printStackTrace();
-                //TODO : send failure info to UI thread
-            }
-            return params[0];
-        }
-
-        @Override
-        protected void onPreExecute(){
-            setProgressBarIndeterminateVisibility(true);
-            Crouton.makeText(ConnectedActivity.this, R.string.bt_initiate_connection, Style.INFO).show();
-        }
-
-        @Override
-        protected void onPostExecute(BluetoothConnector bluetoothConnector) {
-            setProgressBarIndeterminateVisibility(false);
-            Crouton.cancelAllCroutons();
-            Crouton.makeText(ConnectedActivity.this, R.string.bt_connected, Style.INFO).show();
-            findViewById(R.id.close_connection).setEnabled(true);
-            streamToServer = new StreamToServer(bluetoothConnector);
-            //streamToServer.start();
-        }
-    }
-
-    private class StreamToServer extends Thread{
-        private OutputStream outStream;
-        private BluetoothConnector bluetoothConnector;
-
-        public StreamToServer(BluetoothConnector btConnector){
-            try {
-                bluetoothConnector = btConnector;
-                outStream = bluetoothConnector.getOutputStream();
-            } catch (IOException e){
-                Log.d(TAG, "Unable to get output stream");
-                e.printStackTrace();
-                //TODO : Most probably, the server is not running. Tell user to start server or transfer it.
-            }
-        }
-
-        public void run() {
-            //TODO : Timeout some ms and ensure if the connection is up
-        }
-
-        public void write(byte[] data){
-            try {
-                outStream.write(data);
-            } catch (IOException e){
-                Log.d(TAG, "Write Thread IOException");
-                e.printStackTrace();
-            }
-        }
     }
 
     protected void OnDestroy(){
